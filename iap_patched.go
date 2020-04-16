@@ -1,7 +1,7 @@
 package python3
 
 /*
-#cgo !windows pkg-config: python-3.7
+#cgo !windows pkg-config: python3
 #include "Python.h"
 #include "iap_patched.h"
 */
