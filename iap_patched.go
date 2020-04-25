@@ -808,21 +808,21 @@ class RouterWrapper(object):
                 cObjshRouter.Get(path,handler,acl)
             return f
 
-    def Post(self,path,acl):	
+    def Post(self,path,acl,reloadable=False):	
         if reloadable:
             return self.reloadableRouter.register('Post',path,acl)
         else:
             def f(handler):
                 cObjshRouter.Post(path,handler,acl)
             return f
-    def Websocket(self,path,acl):
+    def Websocket(self,path,acl,reloadable=False):
         if reloadable:
             return self.reloadableRouter.register('Websocket',path,acl)
         else:
             def f(handler):
                 cObjshRouter.Websocket(path,handler,acl)
             return f
-    def FileUpload(self,path,acl):
+    def FileUpload(self,path,acl,reloadable=False):
         if reloadable:
             return self.reloadableRouter.register('FileUpload',path,acl)
         else:
@@ -830,7 +830,7 @@ class RouterWrapper(object):
                 cObjshRouter.FileUpload(path,handler,acl)
             return f
     # Not implemented yet
-    #def Wsgi(self,path,acl):	
+    #def Wsgi(self,path,acl,reloadable=False):	
     #	def f(handler):
     #		cObjshRouter.Wsgi(path,handler,acl)
     #	return f
