@@ -8,6 +8,14 @@ Copyright 2018 Datadog, Inc.
 package python3
 
 /*
+There should be a python3.c in your pkgconfig path, ex. 
+/usr/lib/x86_64-linux-gnu/pkgconfig/ in Ubuntu, if not make a symblic link for it.
+For example, ln -s python-3.7.pc python3.pc to create it.
+
+In MacOS, the path might be /usr/local/lib/pkgconfig
+*/
+
+/*
 #cgo pkg-config: python3
 #include "Python.h"
 */

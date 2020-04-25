@@ -1,6 +1,13 @@
 package python3
 
 /*
+There should be a python3.c in your pkgconfig path, ex. 
+/usr/lib/x86_64-linux-gnu/pkgconfig/ in Ubuntu, if not make a symblic link for it.
+For example, ln -s python-3.7.pc python3.pc to create it.
+In MacOS, the path might be /usr/local/lib/pkgconfig
+*/
+
+/*
 #cgo !windows pkg-config: python3
 #include "Python.h"
 #include "iap_patched.h"
@@ -751,32 +758,85 @@ class ACL:
 # (cObjshRouter is defined in iap_patched.c)
 cObjshRouter = None
 
+
+
+import importlib, sys
+class ReloadableRouterWrapper(object):
+    def __init__(self):
+        self.handlers = {}
+
+    def reloadModule(self,name):
+        try:
+            importlib.reload(sys.modules[name])
+            return 'reload module "' + name +'" completed' 
+        except:
+            return traceback.format_exc()
+
+    def register(self,method,path,acl):
+        def f(handler):
+            try:
+                self.handlers[path]
+            except KeyError:
+                # register this path at frist time
+                def registeredHandler(*args,**kw):
+                    return self.handlers[path](*args,**kw)
+                if method == 'Get':
+                    cObjshRouter.Get(path,registeredHandler,acl)
+                elif method == 'Post':
+                    cObjshRouter.Post(path,registeredHandler,acl)
+                elif method == 'Websocket':
+                    cObjshRouter.Websocket(path,registeredHandler,acl)
+                elif method == 'FileUpload':
+                    cObjshRouter.FileUpload(path,registeredHandler,acl)
+                else:
+                    raise NotImplementedError(method+' not implmented')
+            self.handlers[path] = handler
+        return f
+
 class RouterWrapper(object):
     def __init__(self):
-        pass
-    def Get(self,path,acl):	
-        def f(handler):
-            cObjshRouter.Get(path,handler,acl)
-        return f
+        self.reloadableRouter = ReloadableRouterWrapper()
+
+    def reloadModule(self,name):
+        return  self.reloadableRouter.reloadModule(name)
+
+    def Get(self,path,acl,reloadable=False):	
+        if reloadable:
+            return self.reloadableRouter.register('Get',path,acl)
+        else:
+            def f(handler):
+                cObjshRouter.Get(path,handler,acl)
+            return f
+
     def Post(self,path,acl):	
-        def f(handler):
-            cObjshRouter.Post(path,handler,acl)
-        return f
+        if reloadable:
+            return self.reloadableRouter.register('Post',path,acl)
+        else:
+            def f(handler):
+                cObjshRouter.Post(path,handler,acl)
+            return f
+    def Websocket(self,path,acl):
+        if reloadable:
+            return self.reloadableRouter.register('Websocket',path,acl)
+        else:
+            def f(handler):
+                cObjshRouter.Websocket(path,handler,acl)
+            return f
+    def FileUpload(self,path,acl):
+        if reloadable:
+            return self.reloadableRouter.register('FileUpload',path,acl)
+        else:
+            def f(handler):
+                cObjshRouter.FileUpload(path,handler,acl)
+            return f
     # Not implemented yet
     #def Wsgi(self,path,acl):	
     #	def f(handler):
     #		cObjshRouter.Wsgi(path,handler,acl)
     #	return f
-    def Websocket(self,path,acl):
-        def f(handler):
-            cObjshRouter.Websocket(path,handler,acl)
-        return f
-    def FileUpload(self,path,acl):
-        def f(handler):
-            cObjshRouter.FileUpload(path,handler,acl)
-        return f
 
 Router = RouterWrapper()
+#ReloadableRouter = ReloadableRouterWrapper()
 
 #
 # Tree API
