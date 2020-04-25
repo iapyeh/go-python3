@@ -815,6 +815,7 @@ class RouterWrapper(object):
             def f(handler):
                 cObjshRouter.Post(path,handler,acl)
             return f
+
     def Websocket(self,path,acl,reloadable=False):
         if reloadable:
             return self.reloadableRouter.register('Websocket',path,acl)
@@ -822,6 +823,7 @@ class RouterWrapper(object):
             def f(handler):
                 cObjshRouter.Websocket(path,handler,acl)
             return f
+
     def FileUpload(self,path,acl,reloadable=False):
         if reloadable:
             return self.reloadableRouter.register('FileUpload',path,acl)
