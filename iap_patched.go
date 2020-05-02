@@ -912,7 +912,7 @@ initCallables = []
 def callWhenRunning(func,*args,**kw):
     initCallables.append((func,args,kw))
 def callInitCallables():
-    print('Call initial callables' * 20,initCallables)
+    #print('Call initial callables' * 20,initCallables)
     for func,args,kw in initCallables:
         func(*args,**kw)
 
