@@ -735,8 +735,6 @@ func goWsCtxAddEventListener(ptr unsafe.Pointer, evtname *C.char, token4remove *
 func loadPyModuleFastjob() *PyObject {
 	//content is copied from src/fastjob/python/fastjob.py
 	content := `
-# 注意：這段PY有錯誤會在compile時報錯為： segmentation violatoin
-# will be copied to iap_patched.go
 import traceback
 
 #
@@ -877,7 +875,6 @@ class BaseBranch(object):
         self.exportableNames = []
         self.exportableDocs = {}
         for func in funcs:
-            print("exporting",func.__name__)
             self.exportableNames.append(func.__name__)
             self.exportableDocs[func.__name__] = func.__doc__
 
@@ -912,7 +909,6 @@ initCallables = []
 def callWhenRunning(func,*args,**kw):
     initCallables.append((func,args,kw))
 def callInitCallables():
-    #print('Call initial callables' * 20,initCallables)
     for func,args,kw in initCallables:
         func(*args,**kw)
 
@@ -1192,17 +1188,21 @@ func InitIapPatchedModules() {
 }
 
 func CallWhenRunning() {
+    // put this into goroutine, otherwise it will be blocking
+    // because some python routines in callInitCallables might be a blocking call,
+    // such as twisted's reactor.run()
+    go func(){
+        runtime.LockOSThread()
+        defer runtime.UnlockOSThread()
+        gil := PyGILState_Ensure()
+        defer PyGILState_Release(gil)
 
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	gil := PyGILState_Ensure()
-	defer PyGILState_Release(gil)
-
-	//這個 m 是上面定義在golang裡面的module
-	m := GetObjshPyModule()
-	callInitCallables := m.GetAttrString("callInitCallables")
-	emptyTuple := PyTuple_New(0)
-	callInitCallables.Call(emptyTuple, Py_None)
+        //這個 m 是上面定義在golang裡面的module
+        m := GetObjshPyModule()
+        callInitCallables := m.GetAttrString("callInitCallables")
+        emptyTuple := PyTuple_New(0)
+        callInitCallables.Call(emptyTuple, Py_None)
+    }()
 }
 
 var treeExposedToPython map[string]*TreeRoot
