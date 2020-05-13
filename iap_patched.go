@@ -1,7 +1,7 @@
 package python3
 
 /*
-There should be a python3.c in your pkgconfig path, ex. 
+There should be a python3.c in your pkgconfig path, ex.
 /usr/lib/x86_64-linux-gnu/pkgconfig/ in Ubuntu, if not make a symblic link for it.
 For example, ln -s python-3.7.pc python3.pc to create it.
 In MacOS, the path might be /usr/local/lib/pkgconfig
@@ -196,10 +196,11 @@ func GetObjshModule() *PyObject {
 	}
 	return ObjshCModule
 }
+
 // load fastjob module
 func GetObjshPyModule() *PyObject {
-    // 2019-11-21T02:01:19+00:00
-    // Objsh is an old name, will be changed to fastjob graduately.
+	// 2019-11-21T02:01:19+00:00
+	// Objsh is an old name, will be changed to fastjob graduately.
 	if ObjshPyModule == nil {
 		ObjshPyModule = loadPyModuleFastjob()
 	}
@@ -298,14 +299,14 @@ func goCtxPeek(ptr unsafe.Pointer, argPyUnicode *C.PyObject) *C.PyObject {
 		}
 	}
 	key := PyUnicode_AsUTF8(togo(argPyUnicode))
-    value := ctx.Peek(key)
-    if len(value) == 0{
-        // key for peeking is not in query string
-        return toc(Py_None)
-    }else{
-        return toc(PyUnicode_FromString(b2s(value)))
-    }
-        
+	value := ctx.Peek(key)
+	if len(value) == 0 {
+		// key for peeking is not in query string
+		return toc(Py_None)
+	} else {
+		return toc(PyUnicode_FromString(b2s(value)))
+	}
+
 	/*
 	   if ctx, ok := (pointer.Restore(ptr)).(*RequestCtx); ok {
 	       key := PyUnicode_AsUTF8(togo(argPyUnicode))
@@ -381,17 +382,16 @@ func NewPyCtxObject(metadata *PyObject, ctx *RequestCtx) *PyObject {
 	return pyCtxInst
 }
 
-
 //export goObjshRouterGet
 func goObjshRouterGet(path *C.PyObject, handler *C.PyObject, acl int) {
 	urlpath := PyUnicode_AsUTF8(togo(path))
-    Get(urlpath, togo(handler), acl, false)
+	Get(urlpath, togo(handler), acl, false)
 }
 
 //export goObjshRouterPost
 func goObjshRouterPost(path *C.PyObject, handler *C.PyObject, acl int) {
 	urlpath := PyUnicode_AsUTF8(togo(path))
-    Get(urlpath, togo(handler), acl, true)
+	Get(urlpath, togo(handler), acl, true)
 }
 
 //export goObjshRouterWebsocket
@@ -534,8 +534,8 @@ func GenRequestCtx4Python(ctx *RequestCtx) *PyObject {
 }
 
 //register request hander of Get and Post
-func Get(urlpath string, handler *PyObject, acl int, post bool){
-    
+func Get(urlpath string, handler *PyObject, acl int, post bool) {
+
 	gohandler := handler
 	ret := func(ctx *RequestCtx) {
 
@@ -543,7 +543,7 @@ func Get(urlpath string, handler *PyObject, acl int, post bool){
 		runtime.LockOSThread()
 		gil := PyGILState_Ensure()
 		pyCtxMetadata := GenRequestCtx4Python(ctx)
-		pyCtxInst := NewPyCtxObject(pyCtxMetadata, ctx) 
+		pyCtxInst := NewPyCtxObject(pyCtxMetadata, ctx)
 
 		//call python request handler
 		argv := PyTuple_New(1)
@@ -564,18 +564,18 @@ func Get(urlpath string, handler *PyObject, acl int, post bool){
 			// nothing
 		} else {
 			log.Println("Warning: only unicode or bytes can be returned from python")
-        }
-        // 不要送到defer去 release,　會有memory access的問題
+		}
+		// 不要送到defer去 release,　會有memory access的問題
 		PyGILState_Release(gil)
 		runtime.UnlockOSThread()
-        
+
 	}
 	if post {
 		Router.Post(urlpath, ret, acl)
 	} else {
 		Router.Get(urlpath, ret, acl)
-    }
-    fmt.Println("Regiter Get ",urlpath)
+	}
+	fmt.Println("Regiter Get ", urlpath)
 }
 
 /*
@@ -610,7 +610,7 @@ func Wsgi(urlpath string, handler *PyObject, acl int) {
 		*/
 		PyGILState_Release(gil)
 		runtime.UnlockOSThread()
-    }
+	}
 	Router.Get(urlpath, ret, acl)
 }
 
@@ -922,15 +922,15 @@ __all__ = ['Router','ACL','GoTrees','Tree','BaseBranch','callWhenRunning',
 `
 
 	// Let make "from fastjob impot *" happen
-    // here the "fastjob" make sense to user's script (such as in handlers.py)
+	// here the "fastjob" make sense to user's script (such as in handlers.py)
 
-    compile := PyBuiltin_Get("compile")
+	compile := PyBuiltin_Get("compile")
 	args := PyTuple_New(3)
 	PyTuple_SetItem(args, 0, PyUnicode_FromString(content))
 	PyTuple_SetItem(args, 1, PyUnicode_FromString("<string>"))
 	PyTuple_SetItem(args, 2, PyUnicode_FromString("exec"))
 	code := compile.CallObject(args)
-    
+
 	if code == nil {
 		err := GetPythonError()
 		fmt.Errorf("failed to compile RouterWrapper:\n%v\n", err)
@@ -973,7 +973,7 @@ func goPrint(mesg *C.char) {
 	fmt.Println(C.GoString(mesg))
 }
 func Websocket(urlpath string, handler *PyObject, acl int) {
-    WebsocketWithOptions(urlpath, handler, acl, nil) 
+	WebsocketWithOptions(urlpath, handler, acl, nil)
 }
 func WebsocketWithOptions(urlpath string, handler *PyObject, acl int, options *WebsocketOptions) {
 	//func Websocket(urlpath string, pypath string, acl int) {
@@ -994,7 +994,7 @@ func WebsocketWithOptions(urlpath string, handler *PyObject, acl int, options *W
 		PyTuple_SetItem(argv, 0, pyCtxInst)
 		handler.Call(argv, Py_None)
 
-	}, acl,options)
+	}, acl, options)
 }
 
 /*
@@ -1092,7 +1092,7 @@ func FileUpload(urlpath string, handler *PyObject, acl int, post bool) {
 			// nothing
 		} else {
 			log.Println("Warning: only unicode or bytes can be returned from python")
-        }
+		}
 		PyGILState_Release(gil)
 		runtime.UnlockOSThread()
 	}, acl)
@@ -1188,21 +1188,25 @@ func InitIapPatchedModules() {
 }
 
 func CallWhenRunning() {
-    // put this into goroutine, otherwise it will be blocking
-    // because some python routines in callInitCallables might be a blocking call,
-    // such as twisted's reactor.run()
-    go func(){
-        runtime.LockOSThread()
-        defer runtime.UnlockOSThread()
-        gil := PyGILState_Ensure()
-        defer PyGILState_Release(gil)
+	// put this into goroutine, otherwise it will be blocking
+	// because some python routines in callInitCallables might be a blocking call,
+	// such as twisted's reactor.run()
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+		gil := PyGILState_Ensure()
+		defer PyGILState_Release(gil)
 
-        //這個 m 是上面定義在golang裡面的module
-        m := GetObjshPyModule()
-        callInitCallables := m.GetAttrString("callInitCallables")
-        emptyTuple := PyTuple_New(0)
-        callInitCallables.Call(emptyTuple, Py_None)
-    }()
+		//這個 m 是上面定義在golang裡面的module
+		m := GetObjshPyModule()
+		callInitCallables := m.GetAttrString("callInitCallables")
+		emptyTuple := PyTuple_New(0)
+		// 2020-05-12T07:29:50+00:00
+		// .Call works on MacOS but does not work in Linux, it calls another object?
+		// no idea why
+		//callInitCallables.Call(emptyTuple, Py_None)
+		callInitCallables.CallObject(emptyTuple)
+	}()
 }
 
 var treeExposedToPython map[string]*TreeRoot
@@ -1377,18 +1381,18 @@ type PyBranch struct {
 }
 
 func (self *PyBranch) BeReady(tree *TreeRoot) {
-	
-    runtime.LockOSThread()
+
+	runtime.LockOSThread()
 	gil := PyGILState_Ensure()
 
 	self.InitBaseBranch()
-    log.Println("Asking tree <",tree.Name,">'s python branch <",self.Name(), ">to be ready")
-    if self.branch  == nil{
+	log.Println("Asking tree <", tree.Name, ">'s python branch <", self.Name(), ">to be ready")
+	if self.branch == nil {
 		if err := GetPythonError(); err != nil {
 			fmt.Println(err)
 		}
 		panic(fmt.Sprintf("Python self.branch is nil "))
-    }    
+	}
 	beReady := self.branch.GetAttrString("_beReady")
 	args := PyTuple_New(1)
 	PyTuple_SetItem(args, 0, PyUnicode_FromString(tree.Name))
@@ -1487,7 +1491,7 @@ func (self *PyBranch) Call(methodName string, ctx *TreeCallCtx) {
 }
 
 //export goObjshTreeAddBranch
-func goObjshTreeAddBranch(cbranchObj *C.PyObject,ctreeName *C.PyObject) {
+func goObjshTreeAddBranch(cbranchObj *C.PyObject, ctreeName *C.PyObject) {
 	treeName := PyUnicode_AsUTF8(togo(ctreeName))
 	branchObj := togo(cbranchObj)
 	if tree, ok := treeExposedToPython[treeName]; ok {
@@ -1495,7 +1499,7 @@ func goObjshTreeAddBranch(cbranchObj *C.PyObject,ctreeName *C.PyObject) {
 		pybranch := PyBranch{
 			branch: branchObj,
 		}
-		tree.AddBranchWithName(&pybranch,bname)
+		tree.AddBranchWithName(&pybranch, bname)
 	} else {
 		fmt.Errorf("Failed to add branch to tree \"%s\"\n", treeName)
 	}
