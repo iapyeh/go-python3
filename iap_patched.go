@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"time"
 	"unsafe"
+    
 
 	"github.com/valyala/fasthttp"
 
@@ -539,7 +540,7 @@ func Get(urlpath string, handler *PyObject, acl int, post bool) {
 	gohandler := handler
 	ret := func(ctx *RequestCtx) {
 
-		//f.Call need GIL miso
+		//f.Call need GIL 
 		runtime.LockOSThread()
 		gil := PyGILState_Ensure()
 		pyCtxMetadata := GenRequestCtx4Python(ctx)
@@ -1280,19 +1281,27 @@ func NewPyTreeCallCtxObject(ctx *TreeCallCtx) *PyObject {
 }
 
 //export goTreeCallCtxResolve
-func goTreeCallCtxResolve(ptr unsafe.Pointer, jsonstr *C.char) {
+func goTreeCallCtxResolve(ptr unsafe.Pointer, jsonstr *C.char, length C.int) {
 	if ctx, ok := (pointer.Restore(ptr)).(*TreeCallCtx); ok {
 
-		//從c.char轉[]byte會比較有效率，目前還不知道怎麼轉，
-		//暫時先這樣
-		//size := unsafe.Sizeof(unsafe.Pointer(&jsonstr))
-		//stdout := C.GoBytes(unsafe.Pointer(&jsonstr), &size)
+        /*        
 		stdout := C.GoString(jsonstr)
 		result := model.Result{
 			Id:      ctx.CmdID,
 			Retcode: 0,
 			Stdout:  []byte(stdout),
 		}
+        log.Println("directresult of length@@@@@@@@@:",len(result.Stdout))
+        */
+        
+		//從c.char轉[]byte 估計可能比較有效率
+		//stdoutBytes := C.GoBytes(unsafe.Pointer(jsonstr),length)
+		result := model.Result{
+			Id:      ctx.CmdID,
+			Retcode: 0,
+			Stdout:  C.GoBytes(unsafe.Pointer(jsonstr),length),
+		}
+        
 		ctx.DirectResult(&result, true)
 	}
 }

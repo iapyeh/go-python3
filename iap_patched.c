@@ -41,25 +41,16 @@ static int init_json_dumps() {
     if (ret != 0) Py_XINCREF(json_dumps_method);
     return ret;
 }
-char *as_string(PyObject *object) {
+char * as_string(PyObject *object) {
     if (object == NULL) {
         return NULL;
     }
-
-    char *retval = NULL;
-
     if (!PyUnicode_Check(object)) {
         return NULL;
     }
-
-    PyObject *temp_bytes = PyUnicode_AsEncodedString(object, "UTF-8", "strict");
-    if (temp_bytes == NULL) {
-        return NULL;
-    }
-
-    retval = PyBytes_AS_STRING(temp_bytes);
-    Py_XDECREF(temp_bytes);
-    return retval;
+    //char *retval = PyUnicode_AsUTF8(object);
+    //return retval;
+    return (char *)PyUnicode_AsUTF8(object);
 }
 
 
@@ -941,7 +932,7 @@ treecallctx_resolve(TreeCallCtxObject *self, PyObject *args)
         Py_XDECREF(onearg_tuple);
         ret = as_string(jsonstr);
     }
-    goTreeCallCtxResolve(self->ctxptr,ret);
+    goTreeCallCtxResolve(self->ctxptr,ret,strlen(ret));
     PyGILState_Release(state);
 
     //Py_END_ALLOW_THREADS
@@ -990,8 +981,6 @@ treecallctx_reject(TreeCallCtxObject *self, PyObject *args)
         errstr = "";
     }
     else if (size == 1){
-        //jsonstr = PyObject_CallObject(json_dumps_method,args);
-        //ret = as_string(jsonstr);
         retcode = PyLong_AsLong(PyTuple_GET_ITEM(args,0));
         errstr = "";
     }
@@ -1002,7 +991,6 @@ treecallctx_reject(TreeCallCtxObject *self, PyObject *args)
         PyTuple_SET_ITEM(onearg_tuple,0,err);
         jsonstr = PyObject_CallObject(json_dumps_method,onearg_tuple);
         errstr = as_string(jsonstr);
-
     }
     goTreeCallCtxReject(self->ctxptr,retcode,errstr);
     /*
